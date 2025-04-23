@@ -1,5 +1,5 @@
 from typing import Any, List, Optional
-import httpx
+import requests
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server with working directory
@@ -9,20 +9,27 @@ mcp = FastMCP("clinicaltrials-mcp", working_dir="/home/kidzik/workspace/pubmed-m
 API_BASE_URL = "https://clinicaltrials.gov/api/v2"
 TOOL_NAME = "clinicaltrials-mcp"
 
-async def make_api_request(endpoint: str, params: dict) -> Any:
+def make_api_request(endpoint: str, params: dict) -> Any:
     """Make a request to the ClinicalTrials.gov API with proper error handling."""
     url = f"{API_BASE_URL}/{endpoint}"
     
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(url, params=params, timeout=30.0)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            return {"error": str(e)}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "application/json"
+    }
+    
+    try:
+        print(url)
+        print(params)
+        print(headers)
+        response = requests.get(url, params=params, headers=headers, timeout=30.0)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
 
 @mcp.tool()
-async def search_trials(query: str, max_results: int = 10) -> str:
+def search_trials(query: str, max_results: int = 10) -> str:
     """Search ClinicalTrials.gov for studies matching the query.
     
     Args:
@@ -30,12 +37,12 @@ async def search_trials(query: str, max_results: int = 10) -> str:
         max_results: Maximum number of results to return (default: 10)
     """
     search_params = {
-        "query": query,
+        "query.term": query,
         "pageSize": max_results,
         "format": "json"
     }
     
-    search_results = await make_api_request("studies", search_params)
+    search_results = make_api_request("studies", search_params)
     
     if isinstance(search_results, dict) and "error" in search_results:
         return f"Error searching ClinicalTrials.gov: {search_results['error']}"
@@ -69,7 +76,7 @@ async def search_trials(query: str, max_results: int = 10) -> str:
     return "\n\n---\n\n".join(formatted_results)
 
 @mcp.tool()
-async def get_trial_details(nct_id: str) -> str:
+def get_trial_details(nct_id: str) -> str:
     """Get detailed information about a specific clinical trial by its NCT ID.
     
     Args:
@@ -77,7 +84,7 @@ async def get_trial_details(nct_id: str) -> str:
     """
     study_params = {"format": "json"}
     
-    study_details = await make_api_request(f"studies/{nct_id}", study_params)
+    study_details = make_api_request(f"studies/{nct_id}", study_params)
     
     if isinstance(study_details, dict) and "error" in study_details:
         return f"Error retrieving trial details: {study_details['error']}"
@@ -124,7 +131,7 @@ async def get_trial_details(nct_id: str) -> str:
     return formatted_details
 
 @mcp.tool()
-async def find_trials_by_condition(condition: str, max_results: int = 10) -> str:
+def find_trials_by_condition(condition: str, max_results: int = 10) -> str:
     """Search for clinical trials related to a specific medical condition.
     
     Args:
@@ -137,15 +144,15 @@ async def find_trials_by_condition(condition: str, max_results: int = 10) -> str
         "format": "json"
     }
     
-    search_results = await make_api_request("studies", search_params)
+    search_results = make_api_request("studies", search_params)
     
     if isinstance(search_results, dict) and "error" in search_results:
         return f"Error searching by condition: {search_results['error']}"
     
-    return await format_search_results(search_results)
+    return format_search_results(search_results)
 
 @mcp.tool()
-async def find_trials_by_location(location: str, max_results: int = 10) -> str:
+def find_trials_by_location(location: str, max_results: int = 10) -> str:
     """Search for clinical trials in a specific location.
     
     Args:
@@ -158,14 +165,14 @@ async def find_trials_by_location(location: str, max_results: int = 10) -> str:
         "format": "json"
     }
     
-    search_results = await make_api_request("studies", search_params)
+    search_results = make_api_request("studies", search_params)
     
     if isinstance(search_results, dict) and "error" in search_results:
         return f"Error searching by location: {search_results['error']}"
     
-    return await format_search_results(search_results)
+    return format_search_results(search_results)
 
-async def format_search_results(search_results: dict) -> str:
+def format_search_results(search_results: dict) -> str:
     """Helper function to format search results."""
     studies = search_results.get("studies", [])
     if not studies:
