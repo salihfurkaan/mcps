@@ -2,10 +2,8 @@ from typing import Any, List, Optional
 import requests
 from mcp.server.fastmcp import FastMCP
 
-# Initialize FastMCP server with working directory
-mcp = FastMCP("clinicaltrials-mcp", working_dir="/home/kidzik/workspace/pubmed-mcp")
+mcp = FastMCP("clinicaltrials-mcp")
 
-# Constants
 API_BASE_URL = "https://clinicaltrials.gov/api/v2"
 TOOL_NAME = "clinicaltrials-mcp"
 
