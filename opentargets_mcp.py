@@ -3,7 +3,7 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server with working directory
-mcp = FastMCP("opentargets-mcp", working_dir="/home/kidzik/workspace/pubmed-mcp")
+mcp = FastMCP("opentargets-mcp")
 
 # Constants
 API_BASE_URL = "https://api.platform.opentargets.org/api/v4"
