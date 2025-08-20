@@ -1,0 +1,3 @@
+[submodule "mcps"]
+	path = mcps
+	url = ../mcps
